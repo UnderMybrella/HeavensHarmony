@@ -2,6 +2,7 @@ package org.abimon.heavensHarmony
 
 open class HeavensConfig(
         val token: String,
+        val ownerID: Long,
 
         val databaseIP: String,
         val databaseUser: String,
@@ -10,5 +11,7 @@ open class HeavensConfig(
         val databaseCloudProxy: String?,
 
         val rsaPrivateKey: String,
-        val rsaPublicKey: String
+        val rsaPublicKey: String,
+
+        val defaultPrefix: String = "~|"
 )

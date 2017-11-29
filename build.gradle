@@ -35,7 +35,6 @@ apply plugin: 'maven'
 group 'org.abimon'
 
 sourceCompatibility = 1.8
-mainClassName = "org.abimon.spiral.mvc.CockpitKt"
 
 repositories {
     mavenCentral()
