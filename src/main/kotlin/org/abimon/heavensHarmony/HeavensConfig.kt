@@ -3,6 +3,7 @@ package org.abimon.heavensHarmony
 open class HeavensConfig(
         val token: String,
         val ownerID: Long,
+        val applicationID: Long = ownerID,
 
         val databaseIP: String,
         val databaseUser: String,

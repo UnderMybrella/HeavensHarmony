@@ -10,7 +10,7 @@ import java.sql.Statement
 import java.util.*
 
 class EncryptionWrapper(val bot: HeavensBot) {
-    val db: String = "heavens_${bufferAndWait { bot.client.applicationClientID }}"
+    val db: String = "heavens_${bot.config.applicationID}"
     val database: Database = bot.database
 
     val privateKey: PrivateKey
@@ -42,7 +42,6 @@ class EncryptionWrapper(val bot: HeavensBot) {
             select.setString(1, "$server")
 
             select.execute()
-
             val selectResults = select.resultSet
 
             if (selectResults.next())

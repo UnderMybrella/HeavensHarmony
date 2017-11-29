@@ -2,7 +2,6 @@ package org.abimon.heavensHarmony
 
 import org.abimon.dArmada.MessageOrder
 import org.abimon.dArmada.ServerMessageOrder
-import org.abimon.dArmada.prefix
 import org.abimon.imperator.handle.Order
 import org.abimon.imperator.handle.Watchtower
 import org.json.JSONException
@@ -20,7 +19,7 @@ open class AliasCommandWatchtower(val command: String, val checkOutputs: (Map<St
 
     fun getOutputs(order: MessageOrder): Map<String, String>? {
         if(order is ServerMessageOrder) {
-            order.prefix = order.server.prefix
+            order.prefix = order.server.aliasPrefix
             order.params = order.getParams()
         }
 
