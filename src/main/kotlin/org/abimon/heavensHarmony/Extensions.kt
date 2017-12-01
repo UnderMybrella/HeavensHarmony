@@ -14,8 +14,9 @@ import kotlin.reflect.KClass
 fun <T> buffer(action: () -> T): RequestBuffer.RequestFuture<T> = RequestBuffer.request(action)
 fun <T> bufferAndWait(action: () -> T): T = RequestBuffer.request(action).get()
 
-val IGuild.config: GuildConfig?
+var IGuild.config: GuildConfig?
     get() = serverData.getValueFor("config", GuildConfig::class)
+    set(value) { serverData.setValueFor("config", value) }
 
 val IGuild.aliasPrefix: String
     get() = this.config?.prefix ?: HeavensBot.INSTANCE_CONFIG?.defaultPrefix ?: "~|"
@@ -77,6 +78,34 @@ fun <T : Any> ServerData.getValueFor(name: String, klass: KClass<T>): T? {
     }
 
     return null
+}
+
+inline fun <reified T : Any> ServerData.setValueFor(name: String, t: T?): T? {
+    val json = this["$name.json"]
+    if (json != null) {
+        try {
+            val oldValue = HeavensBot.MAPPER.readValue(json.data, T::class.java)
+            this["$name.json"] = HeavensBot.MAPPER.writeValueAsBytes(t)
+
+            return oldValue
+        } catch (json: JsonParseException) {
+        } catch (json: JsonMappingException) {
+        }
+    }
+
+    val yaml = this["$name.yaml"]
+    var oldValue: T? = null
+    if (yaml != null) {
+        try {
+            oldValue = HeavensBot.YAML_MAPPER.readValue(yaml.data, T::class.java)
+        } catch (json: JsonParseException) {
+        } catch (json: JsonMappingException) {
+        }
+    }
+
+    this["$name.yaml"] = HeavensBot.YAML_MAPPER.writeValueAsBytes(t)
+
+    return oldValue
 }
 
 fun IUser.getMemberStatuses(server: IGuild): EnumSet<EnumMemberStatus> {
