@@ -17,7 +17,7 @@ class EncryptionWrapper(val bot: HeavensBot) {
         get() = RSAPrivateKey(File(bot.config.rsaPrivateKey).readText(Charsets.UTF_8))
 
     val publicKey: PublicKey
-        get() = RSAPublicKey(File(bot.config.rsaPrivateKey).readText(Charsets.UTF_8))
+        get() = RSAPublicKey(File(bot.config.rsaPublicKey).readText(Charsets.UTF_8))
 
     private val secureRandom = SecureRandom()
 

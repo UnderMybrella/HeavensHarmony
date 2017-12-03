@@ -113,13 +113,18 @@ fun IUser.getMemberStatuses(server: IGuild): EnumSet<EnumMemberStatus> {
     val serverSettings = server.config
 
     serverSettings?.admin_role?.also { roleID ->
-        if (server.getRolesForUser(this).any { role -> role.longID == roleID })
+        if (server.getRolesForUser(this).any { role -> role.longID == roleID }) {
             enums.add(EnumMemberStatus.ADMINISTRATOR)
+            enums.add(EnumMemberStatus.MODERATOR)
+            enums.add(EnumMemberStatus.VERIFIED)
+        }
     }
 
     serverSettings?.mod_role?.also { roleID ->
-        if (server.getRolesForUser(this).any { role -> role.longID == roleID })
+        if (server.getRolesForUser(this).any { role -> role.longID == roleID }) {
             enums.add(EnumMemberStatus.MODERATOR)
+            enums.add(EnumMemberStatus.VERIFIED)
+        }
     }
 
     if (serverSettings?.verified_role != null) {
