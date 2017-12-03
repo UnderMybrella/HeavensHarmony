@@ -32,7 +32,7 @@ class EncryptionWrapper(val bot: HeavensBot) {
     }
 
     fun Statement.createAESTable()
-            = this.execute("CREATE TABLE IF NOT EXISTS aes_keys (server VARCHAR(63) PRIMARY KEY UNIQUE NOT NULL, aes_key VARCHAR(255) NOT NULL);")
+            = this.execute("CREATE TABLE IF NOT EXISTS aes_keys (server VARCHAR(63) PRIMARY KEY UNIQUE NOT NULL, aes_key VARBINARY(1024) NOT NULL);")
 
     fun getKeyFor(server: Long): ByteArray {
         (database connectionFor db).use { connection ->
@@ -45,14 +45,14 @@ class EncryptionWrapper(val bot: HeavensBot) {
             val selectResults = select.resultSet
 
             if (selectResults.next())
-                return decodeAESKey(selectResults.getString("aes_key"))
+                return selectResults.getBytes("aes_key").decryptRSA(privateKey)
 
             val key = ByteArray(16)
             secureRandom.nextBytes(key)
 
             val insert = connection.prepareStatement("INSERT INTO aes_keys (server, aes_key) VALUES(?, ?);")
             insert.setString(1, "$server")
-            insert.setString(2, encodeAESKey(key))
+            insert.setBytes(2, key.encryptRSA(publicKey))
 
             insert.execute()
 
