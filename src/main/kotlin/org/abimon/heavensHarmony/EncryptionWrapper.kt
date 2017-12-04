@@ -2,12 +2,12 @@ package org.abimon.heavensHarmony
 
 import org.abimon.visi.security.*
 import java.io.File
-import java.security.MessageDigest
-import java.security.PrivateKey
-import java.security.PublicKey
-import java.security.SecureRandom
+import java.security.*
 import java.sql.Statement
 import java.util.*
+import kotlin.collections.HashMap
+
+
 
 class EncryptionWrapper(val bot: HeavensBot) {
     val db: String = "heavens_${bot.config.applicationID}"
@@ -20,6 +20,8 @@ class EncryptionWrapper(val bot: HeavensBot) {
         get() = RSAPublicKey(File(bot.config.rsaPublicKey).readText(Charsets.UTF_8))
 
     private val secureRandom = SecureRandom()
+    private val tmpKeyStore = File("tmp_key_store")
+    private val tmpRSAKeys: MutableMap<Long, PrivateKey> = HashMap()
 
     fun encrypt(data: ByteArray, server: Long, file: String): ByteArray
             = data.encryptAES(file.md5HashData(), getKeyFor(server))
@@ -35,6 +37,13 @@ class EncryptionWrapper(val bot: HeavensBot) {
             = this.execute("CREATE TABLE IF NOT EXISTS aes_keys (server VARCHAR(63) PRIMARY KEY UNIQUE NOT NULL, aes_key VARBINARY(1024) NOT NULL);")
 
     fun getKeyFor(server: Long): ByteArray {
+        val keyFile = File(tmpKeyStore, "$server-key.dat")
+        if (server in tmpRSAKeys && keyFile.exists()) {
+            val rsa = tmpRSAKeys[server]!!
+
+            return keyFile.readBytes().decryptRSA(rsa)
+        }
+
         (database connectionFor db).use { connection ->
             connection.createStatement().createAESTable()
 
@@ -44,19 +53,30 @@ class EncryptionWrapper(val bot: HeavensBot) {
             select.execute()
             val selectResults = select.resultSet
 
-            if (selectResults.next())
-                return selectResults.getBytes("aes_key").decryptRSA(privateKey)
+            val aesKey: ByteArray
 
-            val key = ByteArray(16)
-            secureRandom.nextBytes(key)
+            if (selectResults.next()) {
+                aesKey = selectResults.getBytes("aes_key").decryptRSA(privateKey)
+            } else {
+                aesKey = ByteArray(16)
+                secureRandom.nextBytes(aesKey)
 
-            val insert = connection.prepareStatement("INSERT INTO aes_keys (server, aes_key) VALUES(?, ?);")
-            insert.setString(1, "$server")
-            insert.setBytes(2, key.encryptRSA(publicKey))
+                val insert = connection.prepareStatement("INSERT INTO aes_keys (server, aes_key) VALUES(?, ?);")
+                insert.setString(1, "$server")
+                insert.setBytes(2, aesKey.encryptRSA(publicKey))
 
-            insert.execute()
+                insert.execute()
+            }
 
-            return key
+            val keyGen = KeyPairGenerator.getInstance("RSA")
+            keyGen.initialize(1024, secureRandom)
+
+            val pair = keyGen.genKeyPair()
+
+            tmpRSAKeys[server] = pair.private
+            keyFile.writeBytes(aesKey.encryptRSA(pair.public))
+
+            return aesKey
         }
     }
 
@@ -71,4 +91,14 @@ class EncryptionWrapper(val bot: HeavensBot) {
 
     fun ByteArray.md5HashData(): ByteArray
             = MessageDigest.getInstance("MD5").digest(this)
+
+    init {
+        if (tmpKeyStore.exists())
+            tmpKeyStore.deleteRecursively()
+        tmpKeyStore.mkdir()
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            tmpKeyStore.deleteRecursively()
+        })
+    }
 }
