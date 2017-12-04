@@ -5,14 +5,25 @@ import com.fasterxml.jackson.databind.JsonMappingException
 import org.abimon.dArmada.ServerData
 import org.abimon.dArmada.serverData
 import org.abimon.heavensHarmony.permissions.EnumMemberStatus
+import sx.blah.discord.handle.impl.obj.ReactionEmoji
 import sx.blah.discord.handle.obj.IGuild
+import sx.blah.discord.handle.obj.IMessage
+import sx.blah.discord.handle.obj.IReaction
 import sx.blah.discord.handle.obj.IUser
 import sx.blah.discord.util.RequestBuffer
 import java.util.*
 import kotlin.reflect.KClass
 
+//Type Aliases
+
+typealias MenuOperation = (IMessage, IReaction, IUser) -> Unit
+
+//General Methods
+
 fun <T> buffer(action: () -> T): RequestBuffer.RequestFuture<T> = RequestBuffer.request(action)
 fun <T> bufferAndWait(action: () -> T): T = RequestBuffer.request(action).get()
+
+//IGuild
 
 var IGuild.config: GuildConfig?
     get() = serverData.getValueFor("config", GuildConfig::class)
@@ -57,6 +68,8 @@ fun IGuild.getAliasPaths(command: String): Array<Map<String, Any?>> {
 //
 //    return arrayOf(JSONObject().put("alias", "%prefix$command"))
 //}
+
+//ServerData
 
 fun <T : Any> ServerData.getValueFor(name: String, klass: KClass<T>): T? {
     val json = this["$name.json"]
@@ -108,6 +121,8 @@ inline fun <reified T : Any> ServerData.setValueFor(name: String, t: T?): T? {
     return oldValue
 }
 
+//IUser
+
 fun IUser.getMemberStatuses(server: IGuild): EnumSet<EnumMemberStatus> {
     val enums = if (server.ownerLongID == longID) return EnumSet.allOf(EnumMemberStatus::class.java) else EnumSet.of(EnumMemberStatus.USER, EnumMemberStatus.VERIFIED)
     val serverSettings = server.config
@@ -135,3 +150,6 @@ fun IUser.getMemberStatuses(server: IGuild): EnumSet<EnumMemberStatus> {
 
     return enums
 }
+
+//IMessage
+fun IMessage.react(reaction: String) = RequestBuffer.request { this.addReaction(ReactionEmoji.of(reaction)) }.get()
