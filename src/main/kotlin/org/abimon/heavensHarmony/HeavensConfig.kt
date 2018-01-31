@@ -1,9 +1,13 @@
 package org.abimon.heavensHarmony
 
+import org.apache.http.message.BasicNameValuePair
+import sx.blah.discord.api.internal.DiscordEndpoints
+import sx.blah.discord.api.internal.Requests
+import sx.blah.discord.api.internal.json.responses.ApplicationInfoResponse
+
 open class HeavensConfig(
         val token: String,
         val ownerID: Long,
-        val applicationID: Long = ownerID,
 
         val databaseIP: String,
         val databaseUser: String,
@@ -15,4 +19,6 @@ open class HeavensConfig(
         val rsaPublicKey: String,
 
         val defaultPrefix: String = "~|"
-)
+) {
+    val applicationID: Long = bufferAndWait { java.lang.Long.parseUnsignedLong(Requests.GENERAL_REQUESTS.GET.makeRequest(DiscordEndpoints.APPLICATIONS + "/@me", ApplicationInfoResponse::class.java, BasicNameValuePair("Authorization", "Bot $token")).id) }
+}
