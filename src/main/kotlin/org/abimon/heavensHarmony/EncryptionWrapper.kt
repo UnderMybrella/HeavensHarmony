@@ -10,7 +10,6 @@ import kotlin.collections.HashMap
 
 
 class EncryptionWrapper(val bot: HeavensBot) {
-    val db: String = "heavens_${bot.config.applicationID}"
     val database: Database = bot.database
 
     val privateKey: PrivateKey
@@ -30,7 +29,7 @@ class EncryptionWrapper(val bot: HeavensBot) {
             = data.decryptAES(file.md5HashData(), getKeyFor(server))
 
     fun createTable() {
-        (database connectionFor db).use { connection -> connection.createStatement().createAESTable() }
+        database.use { connection -> connection.createStatement().createAESTable() }
     }
 
     fun Statement.createAESTable()
@@ -44,7 +43,7 @@ class EncryptionWrapper(val bot: HeavensBot) {
             return keyFile.readBytes().decryptRSA(rsa)
         }
 
-        (database connectionFor db).use { connection ->
+        database.use { connection ->
             connection.createStatement().createAESTable()
 
             val select = connection.prepareStatement("SELECT * FROM aes_keys WHERE server=?;")

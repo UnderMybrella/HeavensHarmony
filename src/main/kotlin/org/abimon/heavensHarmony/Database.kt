@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import java.sql.Connection
 
 class Database(val bot: HeavensBot) {
+    val defaultDatabase: String = "heavens_${bot.config.applicationID}"
     val ds: HikariDataSource
     val heavensConfig: HeavensConfig
         get() = bot.config
@@ -38,4 +39,16 @@ class Database(val bot: HeavensBot) {
 
         return c
     }
+
+    public inline fun <R> use(block: (Connection) -> R): R {
+        val c = ds.connection
+        c.createStatement().use { statement ->
+            statement.execute("CREATE DATABASE IF NOT EXISTS $defaultDatabase;")
+            statement.execute("USE $defaultDatabase;")
+        }
+
+        return c.use(block)
+    }
+
+
 }
