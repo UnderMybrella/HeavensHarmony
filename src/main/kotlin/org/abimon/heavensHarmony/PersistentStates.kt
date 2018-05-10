@@ -3,10 +3,10 @@ package org.abimon.heavensHarmony
 import java.io.*
 
 class PersistentStates(val bot: HeavensBot) {
-    val db: Database = bot.database
+    val db: JDBCDatabase = bot.database
 
     operator fun get(key: String): Any? {
-        db.use { connection ->
+        return db.use { connection ->
             val select = connection.prepareStatement("SELECT * FROM persistent WHERE id=?;")
             select.setString(1, key)
             select.execute()
@@ -16,11 +16,11 @@ class PersistentStates(val bot: HeavensBot) {
             if (results.next()) {
                 val serial = results.getBytes("value")
                 val inputStream = ObjectInputStream(ByteArrayInputStream(serial))
-                return inputStream.readObject()
+                return@use inputStream.readObject()
+            } else {
+                return@use null
             }
         }
-
-        return null
     }
 
     operator fun set(key: String, value: Serializable?) {

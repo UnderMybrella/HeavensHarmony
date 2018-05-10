@@ -83,6 +83,32 @@ class EncryptionWrapper(val bot: HeavensBot) {
     fun ByteArray.md5HashData(): ByteArray = MessageDigest.getInstance("MD5").digest(this)
 
     init {
+        val private = File(bot.config.rsaPrivateKey)
+        val public = File(bot.config.rsaPublicKey)
+
+        if (bot.config.createRSAKeys) {
+            if (!private.exists() && !public.exists()) {
+                val keyGen = KeyPairGenerator.getInstance("RSA")
+                keyGen.initialize(bot.config.rsaKeysizeGen)
+                val keys = keyGen.genKeyPair()
+
+                private.writeBytes(keys.private.encoded)
+                public.writeBytes(keys.public.encoded)
+            }
+        } else {
+            if (!private.exists() && !public.exists())
+                error("ERR: Encryption Keys are not provided; if you don't want/can't generate these yourself, add createRSAKeys to your config with the value as true")
+        }
+
+        if (!private.exists() && !public.exists())
+            error("ERR: Keys do not exist")
+
+        if (!private.exists())
+            error("ERR: Private Key does not exist.")
+
+        if (!public.exists())
+            error("ERR: Public Key does not exist")
+
         if (tmpKeyStore.exists())
             tmpKeyStore.deleteRecursively()
         tmpKeyStore.mkdir()
