@@ -9,9 +9,9 @@ open class HeavensConfig(
         val token: String,
         val ownerID: Long,
 
-        val databaseIP: String,
-        val databaseUser: String,
-        val databasePass: String,
+        val databaseURL: String,
+        val databaseUser: String?,
+        val databasePass: String?,
 
         val databaseCloudProxy: String?,
 

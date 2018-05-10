@@ -7,10 +7,8 @@ import java.sql.Statement
 import java.util.*
 import kotlin.collections.HashMap
 
-
-
 class EncryptionWrapper(val bot: HeavensBot) {
-    val database: Database = bot.database
+    val database: JDBCDatabase = bot.database
 
     val privateKey: PrivateKey
         get() = RSAPrivateKey(File(bot.config.rsaPrivateKey).readText(Charsets.UTF_8))
@@ -22,18 +20,15 @@ class EncryptionWrapper(val bot: HeavensBot) {
     private val tmpKeyStore = File("tmp_key_store")
     private val tmpRSAKeys: MutableMap<Long, PrivateKey> = HashMap()
 
-    fun encrypt(data: ByteArray, server: Long, file: String): ByteArray
-            = data.encryptAES(file.md5HashData(), getKeyFor(server))
+    fun encrypt(data: ByteArray, server: Long, file: String): ByteArray = data.encryptAES(file.md5HashData(), getKeyFor(server))
 
-    fun decrypt(data: ByteArray, server: Long, file: String): ByteArray
-            = data.decryptAES(file.md5HashData(), getKeyFor(server))
+    fun decrypt(data: ByteArray, server: Long, file: String): ByteArray = data.decryptAES(file.md5HashData(), getKeyFor(server))
 
     fun createTable() {
         database.use { connection -> connection.createStatement().createAESTable() }
     }
 
-    fun Statement.createAESTable()
-            = this.execute("CREATE TABLE IF NOT EXISTS aes_keys (server VARCHAR(63) PRIMARY KEY UNIQUE NOT NULL, aes_key VARBINARY(1024) NOT NULL);")
+    fun Statement.createAESTable() = this.execute("CREATE TABLE IF NOT EXISTS aes_keys (server VARCHAR(63) PRIMARY KEY UNIQUE NOT NULL, aes_key VARBINARY(1024) NOT NULL);")
 
     fun getKeyFor(server: Long): ByteArray {
         val keyFile = File(tmpKeyStore, "$server-key.dat")
@@ -43,7 +38,7 @@ class EncryptionWrapper(val bot: HeavensBot) {
             return keyFile.readBytes().decryptRSA(rsa)
         }
 
-        database.use { connection ->
+        return database.use { connection ->
             connection.createStatement().createAESTable()
 
             val select = connection.prepareStatement("SELECT * FROM aes_keys WHERE server=?;")
@@ -75,21 +70,17 @@ class EncryptionWrapper(val bot: HeavensBot) {
             tmpRSAKeys[server] = pair.private
             keyFile.writeBytes(aesKey.encryptRSA(pair.public))
 
-            return aesKey
+            return@use aesKey
         }
     }
 
-    fun decodeAESKey(aesKey: String): ByteArray
-            = Base64.getDecoder().decode(aesKey).decryptRSA(privateKey)
+    fun decodeAESKey(aesKey: String): ByteArray = Base64.getDecoder().decode(aesKey).decryptRSA(privateKey)
 
-    fun encodeAESKey(aesKey: ByteArray): String
-            = Base64.getEncoder().encodeToString(aesKey.encryptRSA(publicKey))
+    fun encodeAESKey(aesKey: ByteArray): String = Base64.getEncoder().encodeToString(aesKey.encryptRSA(publicKey))
 
-    fun String.md5HashData(): ByteArray
-            = MessageDigest.getInstance("MD5").digest(this.toByteArray(Charsets.UTF_8))
+    fun String.md5HashData(): ByteArray = MessageDigest.getInstance("MD5").digest(this.toByteArray(Charsets.UTF_8))
 
-    fun ByteArray.md5HashData(): ByteArray
-            = MessageDigest.getInstance("MD5").digest(this)
+    fun ByteArray.md5HashData(): ByteArray = MessageDigest.getInstance("MD5").digest(this)
 
     init {
         if (tmpKeyStore.exists())

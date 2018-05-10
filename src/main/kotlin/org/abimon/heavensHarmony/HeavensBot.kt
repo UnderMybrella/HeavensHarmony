@@ -37,7 +37,7 @@ abstract class HeavensBot {
 
     abstract val client: IDiscordClient
     abstract val config: HeavensConfig
-    abstract val database: Database
+    abstract val database: JDBCDatabase
     abstract val encryption: EncryptionWrapper
 
     val imperator: Imperator = BasicImperator()
