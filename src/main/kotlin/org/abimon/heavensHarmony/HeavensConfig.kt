@@ -15,8 +15,6 @@ open class HeavensConfig(
 
         val databaseCloudProxy: String?,
 
-        val createRSAKeys: Boolean = false,
-        val rsaKeysizeGen: Int = 2048,
         val rsaPrivateKey: String,
         val rsaPublicKey: String,
 

@@ -1,14 +1,16 @@
 package org.abimon.heavensHarmony
 
+import org.abimon.visi.security.sha256Hash
 import java.io.*
 
 class PersistentStates(val bot: HeavensBot) {
     val db: JDBCDatabase = bot.database
 
     operator fun get(key: String): Any? {
+        val hash = key.sha256Hash()
         return db.use { connection ->
-            val select = connection.prepareStatement("SELECT * FROM persistent WHERE id=?;")
-            select.setString(1, key)
+            val select = connection.prepareStatement("SELECT state_value FROM persistent WHERE id=?;")
+            select.setString(1, hash)
             select.execute()
 
             val results = select.resultSet
@@ -24,18 +26,20 @@ class PersistentStates(val bot: HeavensBot) {
     }
 
     operator fun set(key: String, value: Serializable?) {
+        val hash = key.sha256Hash()
+
         db.use { connection ->
             if(value == null) {
                 val delete = connection.prepareStatement("DELETE FROM persistent WHERE id=?;")
-                delete.setString(1, key)
+                delete.setString(1, hash)
                 delete.execute()
             } else {
                 val data = ByteArrayOutputStream()
                 val outputStream = ObjectOutputStream(data)
                 outputStream.writeObject(value)
 
-                val insert = connection.prepareStatement("INSERT INTO persistent (id, value) VALUES(?, ?) ON DUPLICATE KEY UPDATE value=VALUES(value);")
-                insert.setString(1, key)
+                val insert = connection.prepareStatement("INSERT INTO persistent (id, state_value) VALUES(?, ?) ON DUPLICATE KEY UPDATE state_value=VALUES(state_value);")
+                insert.setString(1, hash)
                 insert.setBytes(2, data.toByteArray())
                 insert.execute()
             }
@@ -43,6 +47,6 @@ class PersistentStates(val bot: HeavensBot) {
     }
 
     init {
-        db.use { connection -> connection.createStatement().execute("CREATE TABLE IF NOT EXISTS persistent (id VARCHAR(255) PRIMARY KEY NOT NULL, value BLOB NOT NULL);") }
+        db.use { connection -> connection.createStatement().execute("CREATE TABLE IF NOT EXISTS persistent (id VARCHAR(64) PRIMARY KEY NOT NULL, state_value BLOB NOT NULL);") }
     }
 }
