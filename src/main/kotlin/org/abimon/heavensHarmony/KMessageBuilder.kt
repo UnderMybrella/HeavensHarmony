@@ -210,7 +210,7 @@ open class KMessageBuilder: MessageCreateSpec() {
     }
 
     fun send(): Mono<Message> {
-        if (::channelID.isInitialized)
+        if (!::channelID.isInitialized)
             throw IllegalStateException("No channel defined")
 
         val content = this.content
