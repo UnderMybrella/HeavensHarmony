@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.sql.Connection
 
-class JDBCDatabase(val bot: HeavensBot) {
+open class JDBCDatabase(val bot: HeavensBot) {
     val ds: HikariDataSource
 
     infix fun <T> use(op: (Connection) -> T): T = ds.connection.use(op)

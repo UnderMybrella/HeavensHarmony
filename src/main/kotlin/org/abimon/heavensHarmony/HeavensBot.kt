@@ -8,11 +8,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import org.abimon.dArmada.DiscordScout
-import org.abimon.imperator.handle.Imperator
-import org.abimon.imperator.handle.Scout
-import org.abimon.imperator.impl.BasicImperator
-import sx.blah.discord.api.IDiscordClient
+import discord4j.core.DiscordClient
 
 abstract class HeavensBot {
     companion object {
@@ -35,11 +31,8 @@ abstract class HeavensBot {
             get() = INSTANCE?.config
     }
 
-    abstract val client: IDiscordClient
+    abstract val client: DiscordClient
     abstract val config: HeavensConfig
     abstract val database: JDBCDatabase
     abstract val encryption: EncryptionWrapper
-
-    val imperator: Imperator = BasicImperator()
-    val discordScout: Scout = DiscordScout().apply { imperator.hireScout(this) }
 }

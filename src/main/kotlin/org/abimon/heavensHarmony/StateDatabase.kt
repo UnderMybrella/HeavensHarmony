@@ -1,23 +1,28 @@
 package org.abimon.heavensHarmony
 
-import org.abimon.dArmada.MessageOrder
-import org.abimon.imperator.impl.InstanceSoldier
-import sx.blah.discord.handle.obj.IChannel
-import sx.blah.discord.handle.obj.IUser
+import discord4j.core.DiscordClient
+import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.util.Snowflake
+import discord4j.core.event.domain.message.MessageEvent
 
 object StateDatabase {
-    val states = HashMap<Pair<Long, Long>, Pair<Any?, (MessageOrder, Any?) -> Unit>>()
+    val states = HashMap<Pair<Long, Long>, Pair<Any?, (Message, Any?) -> Unit>>()
 
-    val messageSent = InstanceSoldier<MessageOrder>("State Catcher", emptyList()) { messageOrder ->
-        val (state, func) = states.remove(messageOrder.author.longID to messageOrder.channel.longID) ?: return@InstanceSoldier
-        func(messageOrder, state)
+    fun registerState(user: Snowflake, channel: Snowflake, state: Any?, callback: (Message, Any?) -> Unit) {
+        states[user.asLong() to channel.asLong()] = state to callback
     }
 
-    fun registerState(user: IUser, channel: IChannel, state: Any?, callback: (MessageOrder, Any?) -> Unit) {
-        states[user.longID to channel.longID] = state to callback
+    fun registerState(msg: Message, state: Any?, callback: (Message, Any?) -> Unit) {
+        states[msg.authorId.map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()] = state to callback
     }
 
-    fun registerState(order: MessageOrder, state: Any?, callback: (MessageOrder, Any?) -> Unit) {
-        states[order.author.longID to order.channel.longID] = state to callback
+    fun register(client: DiscordClient) {
+        client.eventDispatcher.on(MessageEvent::class.java)
+                .flatMapToMessage()
+                .subscribe { msg ->
+                    val (state, func) = states.remove(msg.authorId.map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()) ?: return@subscribe
+                    func(msg, state)
+                }
+
     }
 }

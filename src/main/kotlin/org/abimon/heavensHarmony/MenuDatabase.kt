@@ -1,31 +1,35 @@
 package org.abimon.heavensHarmony
 
-import org.abimon.dArmada.DiscordCommand
-import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent
-import sx.blah.discord.handle.obj.IMessage
-import sx.blah.discord.handle.obj.Permissions
-import sx.blah.discord.util.PermissionUtils
+import discord4j.core.DiscordClient
+import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.reaction.ReactionEmoji
+import discord4j.core.event.domain.message.ReactionAddEvent
 
 object MenuDatabase {
     val menus = HashMap<Long, Map<String, MenuOperation>>()
 
-    val reactionAdded = DiscordCommand<ReactionAddEvent> { event ->
-        if (event.user.isBot)
-            return@DiscordCommand
-        val operations = menus[event.message.longID] ?: return@DiscordCommand
-        val operate = operations[event.reaction.emoji.toString()] ?: return@DiscordCommand
-        operate(event.message, event.reaction, event.user)
-
-        if (!event.channel.isPrivate && PermissionUtils.hasPermissions(event.channel, event.client.ourUser, Permissions.MANAGE_MESSAGES))
-            event.message.removeReaction(event.user, event.reaction)
+    fun registerMenu(msg: Message, buttons: List<String>, operation: MenuOperation) = registerMenu(msg, buttons.map { it to operation })
+    fun registerMenu(msg: Message, operations: List<Pair<String, MenuOperation>>) {
+        menus.put(msg.id.asLong(), operations.toMap())
+        operations.forEach { (reaction) -> msg.addReaction(ReactionEmoji.unicode(reaction)) }
     }
 
-    fun registerMenu(msg: IMessage, buttons: List<String>, operation: MenuOperation) = registerMenu(msg, buttons.map { it to operation })
-    fun registerMenu(msg: IMessage, operations: List<Pair<String, MenuOperation>>) {
-        menus.put(msg.longID, operations.toMap())
-        operations.forEach { (reaction) -> msg.react(reaction) }
-    }
+    fun registerMenu(msg: Message, operations: Map<String, MenuOperation>) = menus.put(msg.id.asLong(), operations)
+    fun removeMenu(msg: Message) = menus.remove(msg.id.asLong())
 
-    fun registerMenu(msg: IMessage, operations: Map<String, MenuOperation>) = menus.put(msg.longID, operations)
-    fun removeMenu(msg: IMessage) = menus.remove(msg.longID)
+    fun register(client: DiscordClient) {
+        client.eventDispatcher.on(ReactionAddEvent::class.java)
+                .subscribe { event ->
+                    event.user.subscribe { user ->
+                        event.message.subscribe msg@{ msg ->
+                            val operations = menus[msg.id.asLong()] ?: return@msg
+                            val emojiID = event.emoji.asCustomEmoji().map { emoji -> emoji.id.asString() }.orElseGet { event.emoji.asUnicodeEmoji().map { unicode -> unicode.raw }.orElseGet(event.emoji::toString) }
+                            val operate = operations[emojiID] ?: return@msg
+                            operate(msg, event.emoji, user)
+
+                            msg.removeReaction(event.emoji, user.id)
+                        }
+                    }
+                }
+    }
 }

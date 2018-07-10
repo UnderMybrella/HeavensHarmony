@@ -1,10 +1,10 @@
 buildscript {
-    ext.kotlin_version = '1.2.40'
+    ext.kotlin_version = '1.2.50'
     ext.kotlin_coroutines_version = '0.22.5'
 
-    ext.discord_version = '2.10.1'
+    ext.discord_version = '7fed595cf2'
 
-    ext.fuel_version = '1.12.0'
+    ext.fuel_version = '1.13.0'
 
     ext.h2_version = '1.4.196'
     ext.jdbc_version = '5.1.38'
@@ -12,6 +12,8 @@ buildscript {
     ext.cloud_proxy_version = '1.0.4'
 
     ext.jackson_version = '2.9.2'
+
+    ext.parboiled_version = '1.1.8'
 
     ext.visi_build = '34'
     ext.imperator_build = '7'
@@ -49,7 +51,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines_version"
 
-    compile "com.github.Discord4J:Discord4J:$discord_version"
+    implementation "com.discord4j.discord4j:discord4j-core:$discord_version"
 
     compile "com.github.kittinunf.fuel:fuel:$fuel_version"
 
@@ -59,8 +61,10 @@ dependencies {
     compile "com.google.cloud.sql:mysql-socket-factory:$cloud_proxy_version"
 
     compile "org.abimon:Visi:$visi_build"
-    compile "org.abimon:Imperator:$imperator_build"
-    compile "org.abimon:DiscordianArmada:$armada_build"
+    //compile "org.abimon:Imperator:$imperator_build"
+    //compile "org.abimon:DiscordianArmada:$armada_build"
+
+    compile "org.parboiled:parboiled-java:$parboiled_version"
 
     compile "com.fasterxml.jackson.core:jackson-core:$jackson_version"
     compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
