@@ -53,14 +53,14 @@ abstract class HeavensBot {
         }
     }
 
-    fun hireAngel(angel: ParboiledAngel<*>) {
+    fun <T> hireAngel(angel: ParboiledAngel<T>) {
         angels.add(angel)
 
         client.eventDispatcher.on(MessageCreateEvent::class.java)
                 .filter { angel in angels }
                 .filterWhen { event -> event.message.author.map { user -> !user.isBot } }
-                .filter(angel::acceptMessage)
-                .flatMap(angel.command)
-                .subscribe()
+                .filter(angel::shouldAcceptMessage)
+                .flatMap(angel::acceptMessage)
+                .subscribe(angel::acceptedMessage)
     }
 }
