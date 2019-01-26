@@ -46,9 +46,9 @@ abstract class HeavensBot {
     val angels: MutableList<ParboiledAngel<*>> = ArrayList()
 
     fun hireAngels(afterlife: Any) {
-        afterlife::class.memberProperties.forEach { recruit ->
+        afterlife.javaClass.kotlin.memberProperties.forEach { recruit ->
             if((recruit.returnType.classifier as? KClass<*>)?.isSubclassOf(ParboiledAngel::class) == true || recruit.returnType.classifier == ParboiledAngel::class) {
-                hireAngel(afterlife as? ParboiledAngel<*> ?: return@forEach)
+                hireAngel(recruit.get(afterlife) as? ParboiledAngel<*> ?: return@forEach)
             }
         }
     }
