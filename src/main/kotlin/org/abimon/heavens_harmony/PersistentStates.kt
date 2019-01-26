@@ -1,6 +1,5 @@
-package org.abimon.heavensHarmony
+package org.abimon.heavens_harmony
 
-import org.abimon.visi.security.sha256Hash
 import java.io.*
 
 class PersistentStates(val bot: HeavensBot) {

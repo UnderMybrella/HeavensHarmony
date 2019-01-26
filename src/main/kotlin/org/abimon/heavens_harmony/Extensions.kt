@@ -1,4 +1,4 @@
-package org.abimon.heavensHarmony
+package org.abimon.heavens_harmony
 
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.User

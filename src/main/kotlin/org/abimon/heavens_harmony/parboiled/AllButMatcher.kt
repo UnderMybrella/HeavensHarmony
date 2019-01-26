@@ -1,4 +1,4 @@
-package org.abimon.heavensHarmony.parboiled
+package org.abimon.heavens_harmony.parboiled
 
 import org.parboiled.MatcherContext
 import org.parboiled.matchers.AnyMatcher

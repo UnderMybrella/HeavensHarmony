@@ -1,4 +1,4 @@
-package org.abimon.heavensHarmony
+package org.abimon.heavens_harmony
 
 import discord4j.common.json.EmbedFieldEntity
 import discord4j.core.`object`.entity.Message
@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono
 import java.awt.Color
 import java.io.InputStream
 import java.util.*
-import java.util.function.Consumer
 
 open class KMessageBuilder: MessageCreateSpec() {
     companion object {
@@ -199,14 +198,7 @@ open class KMessageBuilder: MessageCreateSpec() {
                     }.build()
         )
 
-        return MultipartRequest(json, if (files.isEmpty())
-            null
-        else
-            Consumer { form ->
-                form.multipart(true)
-
-                files.forEach { (name, stream) -> form.file(name, stream, "application/octet-stream") }
-            })
+        return MultipartRequest(json, files.firstOrNull()?.first, files.firstOrNull()?.second)
     }
 
     fun send(): Mono<Message> {

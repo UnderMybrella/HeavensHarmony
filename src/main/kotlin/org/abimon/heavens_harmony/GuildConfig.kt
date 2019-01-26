@@ -1,4 +1,4 @@
-package org.abimon.heavensHarmony
+package org.abimon.heavens_harmony
 
 data class GuildConfig(
         var prefix: String?,

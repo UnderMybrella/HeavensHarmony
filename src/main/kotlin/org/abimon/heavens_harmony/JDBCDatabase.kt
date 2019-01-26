@@ -1,4 +1,4 @@
-package org.abimon.heavensHarmony
+package org.abimon.heavens_harmony
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

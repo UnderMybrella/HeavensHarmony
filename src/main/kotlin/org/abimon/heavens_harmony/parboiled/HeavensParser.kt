@@ -1,4 +1,4 @@
-package org.abimon.heavensHarmony.parboiled
+package org.abimon.heavens_harmony.parboiled
 
 import org.parboiled.Action
 import org.parboiled.BaseParser
@@ -20,7 +20,6 @@ open class HeavensParser(parboiledCreated: Boolean) : BaseParser<Any>() {
     open fun InlineWhitespaceCharacter(): Rule = AnyOf(charArrayOf('\t', ' '))
     open fun InlineWhitespace(): Rule = OneOrMore(InlineWhitespaceCharacter())
     open fun OptionalInlineWhitespace(): Rule = ZeroOrMore(InlineWhitespaceCharacter())
-
 
     open val digitsLower = charArrayOf(
             '0', '1', '2', '3', '4', '5',

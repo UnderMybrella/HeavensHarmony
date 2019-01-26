@@ -15,7 +15,7 @@
  *     along with Discord4J.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.abimon.heavensHarmony
+package org.abimon.heavens_harmony
 
 import java.util.*
 
