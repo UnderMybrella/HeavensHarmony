@@ -12,6 +12,9 @@ import discord4j.core.DiscordClient
 import discord4j.core.event.domain.message.MessageCreateEvent
 import org.abimon.heavens_harmony.parboiled.HeavensParser
 import org.abimon.heavens_harmony.parboiled.ParboiledAngel
+import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.memberProperties
 
 abstract class HeavensBot {
     companion object {
@@ -32,7 +35,6 @@ abstract class HeavensBot {
         var INSTANCE: HeavensBot? = null
         val INSTANCE_CONFIG: HeavensConfig?
             get() = INSTANCE?.config
-        val ANGEL_CLASS = ParboiledAngel::class.java
     }
 
     abstract val client: DiscordClient
@@ -44,9 +46,10 @@ abstract class HeavensBot {
     val angels: MutableList<ParboiledAngel<*>> = ArrayList()
 
     fun hireAngels(afterlife: Any) {
-        afterlife::class.java.fields.filter { field -> ANGEL_CLASS.isAssignableFrom(field.type) }.forEach { field ->
-            field.isAccessible = true
-            hireAngel(ANGEL_CLASS.cast(field[afterlife]))
+        afterlife::class.memberProperties.forEach { recruit ->
+            if((recruit.returnType.classifier as? KClass<*>)?.isSubclassOf(ParboiledAngel::class) == true || recruit.returnType.classifier == ParboiledAngel::class) {
+                hireAngel(afterlife as? ParboiledAngel<*> ?: return@forEach)
+            }
         }
     }
 
