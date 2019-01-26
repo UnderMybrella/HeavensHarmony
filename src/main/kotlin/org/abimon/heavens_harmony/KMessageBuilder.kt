@@ -2,8 +2,7 @@ package org.abimon.heavens_harmony
 
 import discord4j.common.json.EmbedFieldEntity
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.TextChannel
-import discord4j.core.`object`.util.Snowflake
+import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.json.request.*
 import discord4j.rest.util.MultipartRequest
@@ -147,7 +146,7 @@ open class KMessageBuilder: MessageCreateSpec() {
     val lastFileName: String?
         get() = files.lastOrNull()?.first
 
-    lateinit var channelID: Snowflake
+    lateinit var channel: Mono<MessageChannel>
     var nonce: String? = null
     val tts: Boolean = false
 
@@ -202,16 +201,12 @@ open class KMessageBuilder: MessageCreateSpec() {
     }
 
     fun send(): Mono<Message> {
-        if (!::channelID.isInitialized)
+        if (!::channel.isInitialized)
             throw IllegalStateException("No channel defined")
 
         val content = this.content
         val embed = this.embed
 
-        return HeavensBot.INSTANCE?.client
-                ?.getChannelById(channelID)
-                ?.ofType(TextChannel::class.java)
-                ?.flatMap { channel -> channel.createMessage(this) }
-                ?: throw IllegalStateException("No HeavensBot instance defined")
+        return channel.flatMap { channel -> channel.createMessage(this) }
     }
 }

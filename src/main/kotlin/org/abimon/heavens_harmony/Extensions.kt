@@ -1,6 +1,7 @@
 package org.abimon.heavens_harmony
 
 import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.MessageCreateEvent
@@ -135,6 +136,20 @@ fun embed(init: KMessageBuilder.() -> Unit): EmbedObject {
 fun message(init: KMessageBuilder.() -> Unit): Mono<Message> {
     val builder = KMessageBuilder()
     builder.init()
+    return builder.send()
+}
+
+fun MessageChannel.sendMessage(init: KMessageBuilder.() -> Unit): Mono<Message> {
+    val builder = KMessageBuilder()
+    builder.init()
+    builder.channel = this.toMono()
+    return builder.send()
+}
+
+fun Mono<MessageChannel>.sendMessage(init: KMessageBuilder.() -> Unit): Mono<Message> {
+    val builder = KMessageBuilder()
+    builder.init()
+    builder.channel = this.toMono()
     return builder.send()
 }
 

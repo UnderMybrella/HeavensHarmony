@@ -37,7 +37,6 @@ abstract class HeavensBot {
             get() = INSTANCE?.config
     }
 
-    abstract val client: DiscordClient
     abstract val config: HeavensConfig
     abstract val database: JDBCDatabase
     abstract val encryption: EncryptionWrapper
@@ -45,23 +44,23 @@ abstract class HeavensBot {
 
     val angels: MutableList<ParboiledAngel<*>> = ArrayList()
 
-    fun hireAngels(afterlife: Any) {
+    fun hireAngels(client: DiscordClient, afterlife: Any) {
         afterlife.javaClass.kotlin.memberProperties.forEach { recruit ->
             if((recruit.returnType.classifier as? KClass<*>)?.isSubclassOf(ParboiledAngel::class) == true || recruit.returnType.classifier == ParboiledAngel::class) {
-                hireAngel(recruit.get(afterlife) as? ParboiledAngel<*> ?: return@forEach)
+                hireAngel(client, recruit.get(afterlife) as? ParboiledAngel<*> ?: return@forEach)
             }
         }
     }
 
-    fun <T> hireAngel(angel: ParboiledAngel<T>) {
+    fun <T> hireAngel(client: DiscordClient, angel: ParboiledAngel<T>) {
         angels.add(angel)
 
         client.eventDispatcher.on(MessageCreateEvent::class.java)
+                .doOnError(Throwable::printStackTrace)
                 .filter { angel in angels }
                 .filterWhen { event -> event.message.author.map { user -> !user.isBot } }
                 .filter(angel::shouldAcceptMessage)
                 .flatMap(angel::acceptMessage)
-                .doOnError(Throwable::printStackTrace)
                 .subscribe(angel::acceptedMessage)
     }
 }
