@@ -1,5 +1,7 @@
 package org.abimon.heavens_harmony
 
+import discord4j.common.jackson.Possible
+import discord4j.common.json.EmbedFieldEntity
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.User
@@ -7,6 +9,7 @@ import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.event.domain.message.MessageEvent
 import discord4j.core.event.domain.message.MessageUpdateEvent
+import discord4j.rest.json.request.*
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toMono
@@ -164,3 +167,44 @@ fun messageSubscribe(init: KMessageBuilder.() -> Unit) {
     builder.init()
     builder.send().subscribe()
 }
+
+fun Message.editMessage(init: KMessageEditBuilder.() -> Unit): Mono<Message> {
+    val builder = KMessageEditBuilder()
+    builder.init()
+    builder.message = this
+    return builder.edit()
+}
+
+fun Mono<Message>.editMessage(init: KMessageEditBuilder.() -> Unit): Mono<Message> {
+    return this.flatMap { msg ->
+        val builder = KMessageEditBuilder()
+        builder.init()
+        builder.message = msg
+        builder.edit()
+    }
+}
+
+fun makeEmbed(init: KMessageBuilder.() -> Unit): EmbedObject {
+    val embedBuilder = KMessageBuilder()
+    embedBuilder.init()
+    return embedBuilder.embed
+}
+
+fun <T> isNull(t: T): Boolean = t == null
+fun <T> isNotNull(t: T): Boolean = t != null
+
+fun <T> possibleOf(t: T?): Possible<T> = if (t == null) Possible.absent() else Possible.of(t)
+
+fun EmbedObject.toRequest(): EmbedRequest = EmbedRequest(
+        possibleOf(title), possibleOf(description), possibleOf(url), possibleOf(timestamp),
+        possibleOf(color.takeUnless((KMessageBuilder.BUT_NOT_BLACK::equals))),
+        possibleOf(footer?.toRequest()), possibleOf(image?.toRequest()),
+        possibleOf(thumbnail?.toRequest()), possibleOf(author?.toRequest()),
+        possibleOf(fields?.map(EmbedObject.EmbedFieldObject::toEntity)?.toTypedArray())
+)
+
+fun EmbedObject.FooterObject.toRequest(): EmbedFooterRequest? = text?.let { text -> EmbedFooterRequest(text, icon_url) }
+fun EmbedObject.ImageObject.toRequest(): EmbedImageRequest? = url?.let(::EmbedImageRequest)
+fun EmbedObject.ThumbnailObject.toRequest(): EmbedThumbnailRequest? = url?.let(::EmbedThumbnailRequest)
+fun EmbedObject.AuthorObject.toRequest(): EmbedAuthorRequest? = name?.let { name -> EmbedAuthorRequest(name, url, icon_url) }
+fun EmbedObject.EmbedFieldObject.toEntity(): EmbedFieldEntity? = name?.let { name -> value?.let { value -> EmbedFieldEntity(name, value, inline) } }
