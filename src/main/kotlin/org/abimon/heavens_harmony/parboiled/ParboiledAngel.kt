@@ -17,7 +17,7 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
         try {
             val result = event.message.content.map(runner::run)
 
-            return !result.map(ParsingResult<*>::hasErrors).orElse(errorOnEmpty)
+            return result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty)
         } finally {
             pool.returnObject(runner)
         }
