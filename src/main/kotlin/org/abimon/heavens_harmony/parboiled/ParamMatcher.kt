@@ -7,7 +7,11 @@ import org.parboiled.support.Chars
 object ParamMatcher : AnyMatcher() {
     override fun match(context: MatcherContext<*>): Boolean {
         return when (context.currentChar) {
-            '"' -> context.inputBuffer.charAt(context.currentIndex - 1) == '\\'
+            '"' -> {
+                if (context.inputBuffer.charAt(context.currentIndex - 1) == '\\')
+                    return super.match(context)
+                return false
+            }
             Chars.EOI -> false
             else -> super.match(context)
         }
