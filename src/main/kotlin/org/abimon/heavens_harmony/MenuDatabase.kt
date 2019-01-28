@@ -20,6 +20,7 @@ object MenuDatabase {
 
     fun register(client: DiscordClient) {
         client.eventDispatcher.on(ReactionAddEvent::class.java)
+                .filterWhen { event -> event.user.map { user -> !user.isBot } }
                 .flatMap { event ->
                     event.user.flatMap { user ->
                         event.message.flatMap msg@{ msg ->
