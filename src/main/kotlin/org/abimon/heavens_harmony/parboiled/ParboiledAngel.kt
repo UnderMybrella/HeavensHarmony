@@ -13,9 +13,14 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
     private val pool: ObjectPool<ParseRunner<Any>> = GenericObjectPool(PooledParseRunnerObjectFactory(rule))
 
     fun shouldAcceptMessage(event: MessageCreateEvent): Boolean {
-        val result = event.message.content.map(pool.borrowObject()::run)
+        val runner = pool.borrowObject()
+        try {
+            val result = event.message.content.map(runner::run)
 
-        return !result.map(ParsingResult<*>::hasErrors).orElse(errorOnEmpty)
+            return !result.map(ParsingResult<*>::hasErrors).orElse(errorOnEmpty)
+        } finally {
+            pool.returnObject(runner)
+        }
     }
 
     fun acceptMessage(event: MessageCreateEvent): Mono<T> = command(event)
