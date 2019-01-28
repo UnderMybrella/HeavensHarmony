@@ -13,7 +13,7 @@ import reactor.core.publisher.toMono
 
 //Type Aliases
 
-typealias MenuOperation = (Message, ReactionEmoji, User) -> Unit
+typealias MenuOperation<T> = (Message, ReactionEmoji, User) -> Mono<T>
 
 //General Methods
 
