@@ -11,15 +11,17 @@ import org.parboiled.support.ValueStack
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
-open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Publisher<T>) {
+open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val beforeAcceptance: (MessageCreateEvent) -> Mono<Boolean> = { Mono.empty() }, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Publisher<T>) {
     private val pool: ObjectPool<ParseRunner<Any>> = GenericObjectPool(PooledParseRunnerObjectFactory(rule))
 
-    fun shouldAcceptMessage(event: MessageCreateEvent): Boolean {
+    fun shouldAcceptMessage(event: MessageCreateEvent): Publisher<Boolean> {
         val runner = pool.borrowObject()
         try {
             val result = event.message.content.map(runner::run)
 
-            return result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty)
+            if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty))
+                return beforeAcceptance(event)
+            return Mono.just(false)
         } finally {
             pool.returnObject(runner)
         }

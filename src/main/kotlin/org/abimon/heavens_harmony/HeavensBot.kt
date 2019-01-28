@@ -59,7 +59,7 @@ abstract class HeavensBot {
                 .doOnError(Throwable::printStackTrace)
                 .filter { angel in angels }
                 .filterWhen { event -> event.message.author.map { user -> !user.isBot } }
-                .filter(angel::shouldAcceptMessage)
+                .filterWhen(angel::shouldAcceptMessage)
                 .flatMap(angel::acceptMessage)
                 .subscribe(angel::acceptedMessage)
     }
