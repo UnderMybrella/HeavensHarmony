@@ -7,9 +7,10 @@ import org.apache.commons.pool2.impl.GenericObjectPool
 import org.parboiled.Rule
 import org.parboiled.parserunners.ParseRunner
 import org.parboiled.support.ParsingResult
+import org.parboiled.support.ValueStack
 import reactor.core.publisher.Mono
 
-open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent) -> Mono<T>) {
+open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Mono<T>) {
     private val pool: ObjectPool<ParseRunner<Any>> = GenericObjectPool(PooledParseRunnerObjectFactory(rule))
 
     fun shouldAcceptMessage(event: MessageCreateEvent): Boolean {
@@ -23,7 +24,20 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
         }
     }
 
-    fun acceptMessage(event: MessageCreateEvent): Mono<T> = command(event)
+    fun acceptMessage(event: MessageCreateEvent): Mono<T> {
+        val runner = pool.borrowObject()
+        return try {
+            val result = event.message.content.map(runner::run)
+
+            if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty)) {
+                command(event, result.map(ParsingResult<*>::valueStack).map(ValueStack<*>::toList).orElse(emptyList()))
+            } else {
+                Mono.empty()
+            }
+        } finally {
+            pool.returnObject(runner)
+        }
+    }
 
     fun acceptedMessage(t: T): Unit = afterAcceptance(t)
 }
