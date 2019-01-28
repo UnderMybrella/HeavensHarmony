@@ -63,6 +63,7 @@ dependencies {
     //compile "org.abimon:DiscordianArmada:$armada_build"
 
     compile "org.parboiled:parboiled-java:$parboiled_version"
+    compile group: 'org.apache.commons', name: 'commons-pool2', version: '2.6.0'
 
     compile "com.fasterxml.jackson.core:jackson-core:$jackson_version"
     compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
