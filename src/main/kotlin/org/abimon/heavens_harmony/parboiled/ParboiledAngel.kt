@@ -8,10 +8,8 @@ import org.parboiled.support.ParsingResult
 import reactor.core.publisher.Mono
 
 open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent) -> Mono<T>) {
-    val runner = ReportingParseRunner<Any>(rule)
-
     fun shouldAcceptMessage(event: MessageCreateEvent): Boolean {
-        runner.parseErrors.clear()
+        val runner = ReportingParseRunner<Any>(rule)
         val result = event.message.content.map(runner::run)
 
         return !result.map(ParsingResult<*>::hasErrors).orElse(errorOnEmpty)
