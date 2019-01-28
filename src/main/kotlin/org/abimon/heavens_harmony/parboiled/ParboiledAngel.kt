@@ -33,7 +33,7 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
             val result = event.message.content.map(runner::run)
 
             if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty)) {
-                command(event, result.map(ParsingResult<*>::valueStack).map(ValueStack<*>::toList).orElse(emptyList()))
+                command(event, result.map(ParsingResult<*>::valueStack).map(ValueStack<*>::toList).map(List<Any>::asReversed).orElse(emptyList()))
             } else {
                 Mono.empty()
             }
