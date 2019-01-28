@@ -8,9 +8,10 @@ import org.parboiled.Rule
 import org.parboiled.parserunners.ParseRunner
 import org.parboiled.support.ParsingResult
 import org.parboiled.support.ValueStack
+import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
-open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Mono<T>) {
+open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Publisher<T>) {
     private val pool: ObjectPool<ParseRunner<Any>> = GenericObjectPool(PooledParseRunnerObjectFactory(rule))
 
     fun shouldAcceptMessage(event: MessageCreateEvent): Boolean {
@@ -24,7 +25,7 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
         }
     }
 
-    fun acceptMessage(event: MessageCreateEvent): Mono<T> {
+    fun acceptMessage(event: MessageCreateEvent): Publisher<T> {
         val runner = pool.borrowObject()
         return try {
             val result = event.message.content.map(runner::run)
