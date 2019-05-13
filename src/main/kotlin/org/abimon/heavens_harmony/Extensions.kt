@@ -2,6 +2,7 @@ package org.abimon.heavens_harmony
 
 import discord4j.common.jackson.Possible
 import discord4j.common.json.EmbedFieldEntity
+import discord4j.core.`object`.data.stored.MessageBean
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.`object`.entity.User
@@ -9,6 +10,8 @@ import discord4j.core.`object`.reaction.ReactionEmoji
 import discord4j.core.event.domain.message.MessageCreateEvent
 import discord4j.core.event.domain.message.MessageEvent
 import discord4j.core.event.domain.message.MessageUpdateEvent
+import discord4j.core.spec.MessageCreateSpec
+import discord4j.core.spec.MessageEditSpec
 import discord4j.rest.json.request.*
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -208,3 +211,19 @@ fun EmbedObject.ImageObject.toRequest(): EmbedImageRequest? = url?.let(::EmbedIm
 fun EmbedObject.ThumbnailObject.toRequest(): EmbedThumbnailRequest? = url?.let(::EmbedThumbnailRequest)
 fun EmbedObject.AuthorObject.toRequest(): EmbedAuthorRequest? = name?.let { name -> EmbedAuthorRequest(name, url, icon_url) }
 fun EmbedObject.EmbedFieldObject.toEntity(): EmbedFieldEntity? = name?.let { name -> value?.let { value -> EmbedFieldEntity(name, value, inline) } }
+
+fun MessageChannel.createMessage(spec: MessageCreateSpec): Mono<Message> {
+    return client.serviceMediator.restClient.channelService
+            .createMessage(id.asLong(), spec.asRequest())
+            .map(::MessageBean)
+            .map { bean -> Message(client.serviceMediator, bean) }
+            .subscriberContext { ctx -> ctx.put("shard", client.serviceMediator.clientConfig.shardIndex) }
+}
+
+fun Message.edit(spec: MessageEditSpec): Mono<Message> {
+    return client.serviceMediator.restClient.channelService
+            .editMessage(channelId.asLong(), id.asLong(), spec.asRequest())
+            .map(::MessageBean)
+            .map { bean -> Message(client.serviceMediator, bean) }
+            .subscriberContext { ctx -> ctx.put("shard", client.serviceMediator.clientConfig.shardIndex) }
+}

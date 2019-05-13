@@ -2,6 +2,7 @@ package org.abimon.heavens_harmony
 
 import discord4j.core.DiscordClient
 import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.User
 import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.message.MessageEvent
 import reactor.core.publisher.Mono
@@ -14,14 +15,14 @@ object StateDatabase {
     }
 
     fun registerState(msg: Message, state: Any?, callback: (Message, Any?) -> Mono<*>) {
-        states[msg.authorId.map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()] = state to callback
+        states[msg.author.map(User::getId).map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()] = state to callback
     }
 
     fun register(client: DiscordClient) {
         client.eventDispatcher.on(MessageEvent::class.java)
                 .flatMapToMessage()
                 .flatMap { msg ->
-                    val (state, func) = states.remove(msg.authorId.map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()) ?: return@flatMap Mono.empty<Void>()
+                    val (state, func) = states.remove(msg.author.map(User::getId).map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()) ?: return@flatMap Mono.empty<Void>()
                     func(msg, state)
                 }
                 .subscribe()

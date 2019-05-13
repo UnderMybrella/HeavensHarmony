@@ -7,6 +7,7 @@ import discord4j.core.spec.MessageCreateSpec
 import discord4j.rest.json.request.*
 import discord4j.rest.util.MultipartRequest
 import reactor.core.publisher.Mono
+import reactor.util.function.Tuples
 import java.awt.Color
 import java.io.InputStream
 import java.util.*
@@ -197,7 +198,7 @@ open class KMessageBuilder: MessageCreateSpec() {
                     }.build()
         )
 
-        return MultipartRequest(json, files.firstOrNull()?.first, files.firstOrNull()?.second)
+        return MultipartRequest(json, files.map { pair -> Tuples.of(pair.first, pair.second) })
     }
 
     fun send(): Mono<Message> {

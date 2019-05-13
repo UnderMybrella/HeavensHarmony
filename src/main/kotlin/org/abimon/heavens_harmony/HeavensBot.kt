@@ -58,7 +58,7 @@ abstract class HeavensBot {
         client.eventDispatcher.on(MessageCreateEvent::class.java)
                 .doOnError(Throwable::printStackTrace)
                 .filter { angel in angels }
-                .filterWhen { event -> event.message.author.map { user -> !user.isBot } }
+                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false) }
                 .filterWhen(angel::shouldAcceptMessage)
                 .flatMap(angel::acceptMessage)
                 .subscribe(angel::acceptedMessage)
