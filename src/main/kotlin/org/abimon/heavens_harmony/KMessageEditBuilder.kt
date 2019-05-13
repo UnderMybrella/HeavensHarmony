@@ -3,7 +3,6 @@ package org.abimon.heavens_harmony
 import discord4j.core.`object`.entity.Message
 import discord4j.core.spec.MessageEditSpec
 import discord4j.rest.json.request.MessageEditRequest
-import org.abimon.heavens_harmony.EmbedObject
 import reactor.core.publisher.Mono
 import java.awt.Color
 import java.io.InputStream
