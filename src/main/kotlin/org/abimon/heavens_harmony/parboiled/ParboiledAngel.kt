@@ -17,12 +17,17 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val name: String, val rule: Ru
     fun shouldAcceptMessage(event: MessageCreateEvent): Publisher<Boolean> {
         val runner = pool.borrowObject()
         try {
+            bot.logger.trace("[$name] Parsing message")
             val result = event.message.content.map(runner::run)
 
             if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty))
                 return beforeAcceptance(event).doOnSuccess { accept -> bot.logger.trace("[$name] Should accept: $accept") }
             return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("[$name] Did not match (${result.map(ParsingResult<*>::parseErrors).map { errors -> errors.joinToString { error -> "${error.errorMessage} [${error.startIndex}-${error.endIndex}]" } }}); should accept: $accept") }
+        } catch (th: Throwable) {
+            bot.logger.trace("[$name] Got an exception", th)
+            throw th
         } finally {
+            bot.logger.trace("[$name] Returning object")
             pool.returnObject(runner)
         }
     }

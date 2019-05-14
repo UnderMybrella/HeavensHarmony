@@ -61,9 +61,9 @@ abstract class HeavensBot {
         client.eventDispatcher.on(MessageCreateEvent::class.java)
                 .log()
                 .doOnError(Throwable::printStackTrace)
-                .doOnNext { logger.trace("Received MessageCreateEvent; angel is subscribed: {}", angel in angels) }
+                .doOnNext { logger.trace("[${angel.name}] Received MessageCreateEvent; angel is subscribed: {}", angel in angels) }
                 .filter { angel in angels }
-                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false).also { isBot -> logger.trace("Message sent by member: {}", isBot) } }
+                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false).also { isBot -> logger.trace("[${angel.name}] Message sent by member: {}", isBot) } }
                 .filterWhen(angel::shouldAcceptMessage)
                 .flatMap(angel::acceptMessage)
                 .subscribe(angel::acceptedMessage)
