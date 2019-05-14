@@ -4,8 +4,8 @@ import org.apache.commons.pool2.BasePooledObjectFactory
 import org.apache.commons.pool2.PooledObject
 import org.apache.commons.pool2.impl.DefaultPooledObject
 import org.parboiled.Rule
-import org.parboiled.parserunners.BasicParseRunner
 import org.parboiled.parserunners.ParseRunner
+import org.parboiled.parserunners.ReportingParseRunner
 import org.parboiled.support.DefaultValueStack
 
 open class PooledParseRunnerObjectFactory(val rule: Rule): BasePooledObjectFactory<ParseRunner<Any>>() {
@@ -30,7 +30,7 @@ open class PooledParseRunnerObjectFactory(val rule: Rule): BasePooledObjectFacto
      * @throws Exception if there is a problem creating a new instance,
      * this will be propagated to the code requesting an object.
      */
-    override fun create(): ParseRunner<Any> = BasicParseRunner(rule)
+    override fun create(): ParseRunner<Any> = ReportingParseRunner(rule)
 
     /**
      * Uninitializes an instance to be returned to the idle object pool.
