@@ -63,7 +63,7 @@ abstract class HeavensBot {
                 .doOnError(Throwable::printStackTrace)
                 .doOnNext { logger.trace("Received MessageCreateEvent; angel is subscribed: {}", angel in angels) }
                 .filter { angel in angels }
-                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false).also { isBot -> logger.trace("Message sent by bot: {}", isBot) } }
+                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false).also { isBot -> logger.trace("Message sent by member: {}", isBot) } }
                 .filterWhen(angel::shouldAcceptMessage)
                 .flatMap(angel::acceptMessage)
                 .subscribe(angel::acceptedMessage)

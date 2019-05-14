@@ -20,8 +20,8 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
             val result = event.message.content.map(runner::run)
 
             if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty))
-                return beforeAcceptance(event)
-            return Mono.just(false)
+                return beforeAcceptance(event).doOnSuccess { accept -> bot.logger.trace("Should accept: $accept") }
+            return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("Did not match; should accept: $accept") }
         } finally {
             pool.returnObject(runner)
         }
@@ -33,8 +33,10 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
             val result = event.message.content.map(runner::run)
 
             if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty)) {
+                bot.logger.trace("Accepting event")
                 command(event, result.map(ParsingResult<*>::valueStack).map(ValueStack<*>::toList).map(List<Any>::asReversed).orElse(emptyList()))
             } else {
+                bot.logger.trace("Did not match; not handling event")
                 Mono.empty()
             }
         } finally {
