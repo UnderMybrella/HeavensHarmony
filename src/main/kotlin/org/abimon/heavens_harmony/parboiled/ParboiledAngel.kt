@@ -21,7 +21,7 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
 
             if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty))
                 return beforeAcceptance(event).doOnSuccess { accept -> bot.logger.trace("Should accept: $accept") }
-            return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("Did not match; should accept: $accept") }
+            return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("Did not match ($result); should accept: $accept") }
         } finally {
             pool.returnObject(runner)
         }
