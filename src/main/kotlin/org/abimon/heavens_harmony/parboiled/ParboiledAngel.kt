@@ -11,7 +11,7 @@ import org.parboiled.support.ValueStack
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
-open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmpty: Boolean = true, val beforeAcceptance: (MessageCreateEvent) -> Mono<Boolean> = { Mono.just(true) }, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Publisher<T>) {
+open class ParboiledAngel<T>(val bot: HeavensBot, val name: String, val rule: Rule, val errorOnEmpty: Boolean = true, val beforeAcceptance: (MessageCreateEvent) -> Mono<Boolean> = { Mono.just(true) }, val afterAcceptance: (T) -> Unit = {}, val command: (MessageCreateEvent, List<Any>) -> Publisher<T>) {
     private val pool: ObjectPool<ParseRunner<Any>> = GenericObjectPool(PooledParseRunnerObjectFactory(rule))
 
     fun shouldAcceptMessage(event: MessageCreateEvent): Publisher<Boolean> {
@@ -20,8 +20,8 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val rule: Rule, val errorOnEmp
             val result = event.message.content.map(runner::run)
 
             if (result.map(ParsingResult<*>::matched).orElse(!errorOnEmpty))
-                return beforeAcceptance(event).doOnSuccess { accept -> bot.logger.trace("Should accept: $accept") }
-            return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("Did not match ($result); should accept: $accept") }
+                return beforeAcceptance(event).doOnSuccess { accept -> bot.logger.trace("[$name] Should accept: $accept") }
+            return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("[$name] Did not match ($result); should accept: $accept") }
         } finally {
             pool.returnObject(runner)
         }
