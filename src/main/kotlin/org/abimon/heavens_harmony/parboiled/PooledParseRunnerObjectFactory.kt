@@ -8,7 +8,7 @@ import org.parboiled.parserunners.ParseRunner
 import org.parboiled.parserunners.ReportingParseRunner
 import org.parboiled.support.DefaultValueStack
 
-open class PooledParseRunnerObjectFactory(val rule: Rule): BasePooledObjectFactory<ParseRunner<Any>>() {
+open class PooledParseRunnerObjectFactory(val rule: () -> Rule): BasePooledObjectFactory<ParseRunner<Any>>() {
     /**
      * Wrap the provided instance with an implementation of
      * [PooledObject].
@@ -30,7 +30,7 @@ open class PooledParseRunnerObjectFactory(val rule: Rule): BasePooledObjectFacto
      * @throws Exception if there is a problem creating a new instance,
      * this will be propagated to the code requesting an object.
      */
-    override fun create(): ParseRunner<Any> = ReportingParseRunner(rule)
+    override fun create(): ParseRunner<Any> = ReportingParseRunner(rule())
 
     /**
      * Uninitializes an instance to be returned to the idle object pool.
