@@ -12,6 +12,8 @@ import discord4j.core.DiscordClient
 import discord4j.core.event.domain.message.MessageCreateEvent
 import org.abimon.heavens_harmony.parboiled.HeavensParser
 import org.abimon.heavens_harmony.parboiled.ParboiledAngel
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
@@ -43,6 +45,7 @@ abstract class HeavensBot {
     abstract val parser: HeavensParser
 
     val angels: MutableList<ParboiledAngel<*>> = ArrayList()
+    open val logger: Logger = LoggerFactory.getLogger("HeavensBot")
 
     fun hireAngels(client: DiscordClient, afterlife: Any) {
         afterlife.javaClass.kotlin.memberProperties.forEach { recruit ->
@@ -56,9 +59,11 @@ abstract class HeavensBot {
         angels.add(angel)
 
         client.eventDispatcher.on(MessageCreateEvent::class.java)
+                .log()
                 .doOnError(Throwable::printStackTrace)
+                .doOnNext { logger.trace("Received MessageCreateEvent; angel is subscribed: {}", angel in angels) }
                 .filter { angel in angels }
-                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false) }
+                .filter { event -> event.message.author.map { user -> !user.isBot }.orElse(false).also { isBot -> logger.trace("Message sent by bot: {}", isBot) } }
                 .filterWhen(angel::shouldAcceptMessage)
                 .flatMap(angel::acceptMessage)
                 .subscribe(angel::acceptedMessage)
