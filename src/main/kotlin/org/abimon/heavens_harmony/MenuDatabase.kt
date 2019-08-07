@@ -8,17 +8,21 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 object MenuDatabase {
-    val menus = HashMap<Long, Map<String, MenuOperation<*>>>()
+    val menus = HashMap<Pair<Long, Long>, Map<String, MenuOperation<*>>>()
 
-    fun registerMenu(msg: Message, buttons: List<String>, operation: MenuOperation<*>): Flux<Void> = registerMenu(msg, buttons.map { it to operation })
-    fun registerMenu(msg: Message, operations: List<Pair<String, MenuOperation<*>>>): Flux<Void> = registerMenu(msg, operations.toMap())
-    fun registerMenu(msg: Message, operations: Map<String, MenuOperation<*>>): Flux<Void> {
-        menus[msg.id.asLong()] = operations
+    fun registerMenu(msg: Message, forUser: Long, buttons: List<String>, operation: MenuOperation<*>): Flux<Void> = registerMenu(msg, forUser, buttons.map { it to operation })
+    fun registerMenu(msg: Message, forUser: Long, operations: List<Pair<String, MenuOperation<*>>>): Flux<Void> = registerMenu(msg, forUser, operations.toMap())
+    fun registerMenu(msg: Message, forUser: Long, operations: Map<String, MenuOperation<*>>): Flux<Void> {
+        menus[Pair(msg.id.asLong(), forUser)] = operations
         return Flux.fromArray(operations.keys.toTypedArray())
                 .flatMap { reaction -> msg.addReaction(ReactionEmoji.unicode(reaction)) }
     }
 
-    fun removeMenu(msg: Message) = menus.remove(msg.id.asLong())
+    fun removeMenu(msg: Message) = menus.keys
+            .filter { pair -> pair.first == msg.id.asLong() }
+            .forEach(menus::remove)
+
+    fun removeMenu(msg: Message, forUser: Long) = menus.remove(Pair(msg.id.asLong(), forUser))
 
     fun register(client: DiscordClient) {
         client.eventDispatcher.on(ReactionAddEvent::class.java)
@@ -26,12 +30,10 @@ object MenuDatabase {
                 .flatMap { event ->
                     event.user.flatMap { user ->
                         event.message.flatMap msg@{ msg ->
-                            val operations = menus[msg.id.asLong()] ?: return@msg Mono.empty<Void>()
+                            val operations = menus[Pair(msg.id.asLong(), user.id.asLong())] ?: return@msg Mono.empty<Void>()
                             val emojiID = event.emoji.asCustomEmoji().map { emoji -> emoji.id.asString() }.orElseGet { event.emoji.asUnicodeEmoji().map { unicode -> unicode.raw }.orElseGet(event.emoji::toString) }
                             val operate = operations[emojiID] ?: return@msg Mono.empty<Void>()
-                            operate(msg, event.emoji, user).flatMap {
-                                msg.removeReaction(event.emoji, user.id)
-                            }
+                            operate(msg, event.emoji, user).then(msg.removeReaction(event.emoji, user.id))
                         }
                     }
                 }
