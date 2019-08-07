@@ -14,8 +14,10 @@ object MenuDatabase {
     fun registerMenu(msg: Message, operations: List<Pair<String, MenuOperation<*>>>): Flux<Void> = registerMenu(msg, operations.toMap())
     fun registerMenu(msg: Message, operations: Map<String, MenuOperation<*>>): Flux<Void> {
         menus[msg.id.asLong()] = operations
-        return Flux.fromArray(operations.keys.toTypedArray()).flatMap { reaction -> msg.addReaction(ReactionEmoji.unicode(reaction)) }
+        return Flux.fromArray(operations.keys.toTypedArray())
+                .flatMap { reaction -> msg.addReaction(ReactionEmoji.unicode(reaction)) }
     }
+
     fun removeMenu(msg: Message) = menus.remove(msg.id.asLong())
 
     fun register(client: DiscordClient) {
@@ -27,7 +29,10 @@ object MenuDatabase {
                             val operations = menus[msg.id.asLong()] ?: return@msg Mono.empty<Void>()
                             val emojiID = event.emoji.asCustomEmoji().map { emoji -> emoji.id.asString() }.orElseGet { event.emoji.asUnicodeEmoji().map { unicode -> unicode.raw }.orElseGet(event.emoji::toString) }
                             val operate = operations[emojiID] ?: return@msg Mono.empty<Void>()
-                            operate(msg, event.emoji, user).flatMap { msg.removeReaction(event.emoji, user.id) }
+                            operate(msg, event.emoji, user).flatMap {
+                                msg.removeReaction(event.emoji, user.id)
+                                        .onErrorContinue(::emptyErrorContinue)
+                            }
                         }
                     }
                 }

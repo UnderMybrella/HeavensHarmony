@@ -10,7 +10,7 @@ open class JDBCDatabase(val bot: HeavensBot) {
     infix fun <T> use(op: (Connection) -> T): T = ds.connection.use(op)
 
     init {
-        Class.forName("com.mysql.jdbc.Driver")
+        try { Class.forName("com.mysql.cj.jdbc.Driver") } catch (th: Throwable) {}
 
         val config = HikariConfig()
         config.jdbcUrl = bot.config.databaseURL
