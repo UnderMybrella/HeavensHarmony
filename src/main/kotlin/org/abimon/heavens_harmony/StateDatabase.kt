@@ -25,6 +25,7 @@ object StateDatabase {
                     val (state, func) = states.remove(msg.author.map(User::getId).map(Snowflake::asLong).orElse(0) to msg.channelId.asLong()) ?: return@flatMap Mono.empty<Void>()
                     func(msg, state)
                 }
+                .onErrorContinue(::emptyErrorContinue)
                 .subscribe()
 
     }
