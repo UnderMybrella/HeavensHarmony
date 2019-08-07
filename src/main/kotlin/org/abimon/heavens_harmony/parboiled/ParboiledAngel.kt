@@ -24,7 +24,7 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val name: String, val rule: ()
                 return beforeAcceptance(event).doOnSuccess { accept -> bot.logger.trace("[$name] Should accept: $accept") }
             return Mono.just(false).doOnSuccess { accept -> bot.logger.trace("[$name] Did not match (${result.map(ParsingResult<*>::parseErrors).map { errors -> errors.joinToString { error -> "${error.errorMessage} [${error.startIndex}-${error.endIndex}]" } }}); should accept: $accept") }
         } catch (th: Throwable) {
-            bot.logger.trace("[$name] Got an exception", th)
+            bot.logger.error("[$name] Got an exception for input {}", event.message.content.orElse("<none>"), th)
             throw th
         } finally {
             bot.logger.trace("[$name] Returning object")
@@ -44,6 +44,9 @@ open class ParboiledAngel<T>(val bot: HeavensBot, val name: String, val rule: ()
                 bot.logger.trace("Did not match; not handling event")
                 Mono.empty()
             }
+        } catch (th: Throwable) {
+            bot.logger.error("[$name] Got an exception for input {}", event.message.content.orElse("<none>"), th)
+            throw th
         } finally {
             pool.returnObject(runner)
         }
