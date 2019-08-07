@@ -14,6 +14,7 @@ import org.abimon.heavens_harmony.parboiled.HeavensParser
 import org.abimon.heavens_harmony.parboiled.ParboiledAngel
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.logging.Level
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
@@ -59,7 +60,7 @@ abstract class HeavensBot {
         angels.add(angel)
 
         client.eventDispatcher.on(MessageCreateEvent::class.java)
-                .log()
+                .log("[${angel.name}]", Level.FINER)
                 .doOnError(Throwable::printStackTrace)
                 .doOnNext { logger.trace("[${angel.name}] Received MessageCreateEvent; angel is subscribed: {}", angel in angels) }
                 .filter { angel in angels }
