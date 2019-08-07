@@ -20,7 +20,7 @@ object MenuDatabase {
 
     fun removeMenu(msg: Message) = menus.keys
             .filter { pair -> pair.first == msg.id.asLong() }
-            .forEach(menus::remove)
+            .forEach { pair -> menus.remove(pair) }
 
     fun removeMenu(msg: Message, forUser: Long) = menus.remove(Pair(msg.id.asLong(), forUser))
 
