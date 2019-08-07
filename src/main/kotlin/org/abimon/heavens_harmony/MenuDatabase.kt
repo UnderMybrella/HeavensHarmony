@@ -31,11 +31,11 @@ object MenuDatabase {
                             val operate = operations[emojiID] ?: return@msg Mono.empty<Void>()
                             operate(msg, event.emoji, user).flatMap {
                                 msg.removeReaction(event.emoji, user.id)
-                                        .onErrorContinue(::emptyErrorContinue)
                             }
                         }
                     }
                 }
+                .onErrorContinue(::emptyErrorContinue)
                 .subscribe()
     }
 }
